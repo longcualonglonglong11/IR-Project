@@ -31,6 +31,21 @@ def load_cont(fld_path):  # give path of the folder containing all documents
     return contents, ori_cont
 
 
+def remove_stopwords_and_punctuations_for_query(query):
+    new_query = []
+    with open('vn_stopword.txt', 'r', encoding='utf-8') as f:
+        vietnamese_stop_words = f.read().split('\n')
+    punctuations = list(string.punctuation) + ['\n']
+    ignore_word = vietnamese_stop_words + punctuations
+    for word in query:
+        for w in word_tokenize(word):
+            if w in ignore_word:
+                continue
+            else:
+                new_query.append(w)
+    return new_query
+
+
 def remove_stopwords_and_punctuations(doc_dict):
     with open('vn_stopword.txt', 'r', encoding='utf-8') as f:
         vietnamese_stop_words = f.read().split('\n')
@@ -128,12 +143,12 @@ def cal_tfidf(vocab, tf, idf_scr, doc_dict):
 
 
 def process_query(query, doc_dict, tf_idf, limit):
-
     query_vocab = []
     for word in query.split():
         if word not in query_vocab:
             query_vocab.append(word)
 
+    query_vocab = remove_stopwords_and_punctuations_for_query(query_vocab)
     query_word_count = {}
     for word in query_vocab:
         query_word_count[word] = query.lower().split().count(word)
@@ -146,7 +161,9 @@ def process_query(query, doc_dict, tf_idf, limit):
                 score += query_word_count[word] * tf_idf[doc_name][word]
             except:
                 # Penalizing
-                score -= 1
+                score -= len(doc_dict[doc_name]) * query_word_count[word]
+                break
+
         scores[doc_name] = score
     relevance_scores = {}
     quantity = 0
@@ -215,12 +232,13 @@ def search(query, limit):
     end = time.time()
     query_time = end - start
     print('Time:', query_time)
+    print('quantity:', quantity)
     return data, query_time, quantity
 
 
 # Debugging
 if __name__ == "__main__":
-    query = "triển"
+    query = "việt nam, \"\""
     data, time, quatity = search(query, 3)
 
     top = 0
