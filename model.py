@@ -3,9 +3,7 @@ import glob
 import pickle
 import time
 from multiprocessing import Pool
-
 import nltk
-
 nltk.download('popular')
 from joblib._multiprocessing_helpers import mp
 from nltk import word_tokenize
@@ -15,17 +13,20 @@ from collections import OrderedDict
 from prepare import download_material
 
 # download_material()
+
+
 def load_cont(fld_path):  # give path of the folder containing all documents
     file_names = glob.glob(fld_path)
-    collected_file_names = file_names[:10]
     contents = {}
-    for file in collected_file_names:
+    ori_cont = {}
+    for file in file_names:
         file_name = file.split('/')
         file_name = file_name[-1]
         with open(file, 'r', encoding='utf-16') as f:
-            data = f.read().lower()
-        contents[file_name] = data
-    return contents
+            data = f.read()
+        contents[file_name] = data.lower()
+        ori_cont[file_name] = data
+    return contents, ori_cont
 
 
 def remove_stopwords_and_punctuations(doc_dict):
@@ -162,25 +163,25 @@ def process_query(query, doc_dict, tf_idf, limit):
 
 docs = []
 tf_idf = []
-
+ori_docs = []
 
 def search(query, limit):
     start = time.time()
     try:
         global docs
+        global ori_docs
         global tf_idf
         if len(docs) == 0 and len(tf_idf) == 0:
             print("Get cached model")
-            # Read from internal folder
-            with open('cache/docs.bin', 'rb') as docs_bin:
-                docs = pickle.load(docs_bin)
-            with open('cache/tf_idf.bin', 'rb') as tf_idf_bin:
+            with open('cache/docs.txt', 'rb') as docs_bin:
+                ori_docs = pickle.load(docs_bin)
+            with open('cache/tf_idf.txt', 'rb') as tf_idf_bin:
                 tf_idf = pickle.load(tf_idf_bin)
     except Exception as e:
         print(e)
         print('Begin build model', time.time())
         path = 'Data/*.txt'
-        docs = load_cont(path)
+        docs, ori_docs = load_cont(path)
         data_len = len(docs)
         word_list = remove_stopwords_and_punctuations(docs)
         print('Step 1 done', time.time())
@@ -193,9 +194,9 @@ def search(query, limit):
         print('Step 4 done', time.time())
         tf_idf = cal_tfidf(vocab, tf_dict, idf_dict, docs)
         print('Step 5 done', time.time())
-        with open('cache/docs.bin', 'wb') as docs_bin:
-            pickle.dump(docs, docs_bin)
-        with open('cache/tf_idf.bin', 'wb') as tf_idf_bin:
+        with open('cache/docs.txt', 'wb') as docs_bin:
+            pickle.dump(ori_docs, docs_bin)
+        with open('cache/tf_idf.txt', 'wb') as tf_idf_bin:
             pickle.dump(tf_idf, tf_idf_bin)
         print('Finish build model', time.time())
 
@@ -212,7 +213,7 @@ def search(query, limit):
 # Debugging
 if __name__ == "__main__":
     query = "khoa học tự nhiên, khoa học xã hội"
-    data, time = search(query, 3)
+    data, time, quatity = search(query, 3)
 
     top = 0
     for i in data:
