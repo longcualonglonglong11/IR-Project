@@ -17,7 +17,7 @@ from prepare import download_material
 download_material()
 def load_cont(fld_path):  # give path of the folder containing all documents
     file_names = glob.glob(fld_path)
-    collected_file_names = file_names[:i]
+    collected_file_names = file_names[:10]
     contents = {}
     for file in collected_file_names:
         file_name = file.split('/')
