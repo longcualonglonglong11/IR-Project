@@ -128,7 +128,7 @@ def get_df_async(doc_dict, word):
 def calc_idf(vocab, doc_fre, length):
     idf = {}
     for word in vocab:
-        idf[word] = np.log2((length + 1) / doc_fre[word])
+        idf[word] = np.log10((length + 1) / doc_fre[word])
     return idf
 
 
@@ -140,7 +140,6 @@ def cal_tfidf(vocab, tf, idf_scr, doc_dict):
         for doc_name, doc in doc_dict.items():
             tf_idf_list[doc_name][word] = idf_scr[word] * tf[doc_name][word]
     return tf_idf_list
-
 
 def process_query(query, doc_dict, tf_idf, limit):
     query_vocab = []
@@ -162,9 +161,9 @@ def process_query(query, doc_dict, tf_idf, limit):
             except:
                 # Penalizing
                 score -= len(doc_dict[doc_name]) * query_word_count[word]
-                break
-
         scores[doc_name] = score
+        if score > 0 and doc_dict[doc_name].find(query) > 0:
+            scores[doc_name] += 100000
     relevance_scores = {}
     quantity = 0
     for score in scores.items():
@@ -238,7 +237,7 @@ def search(query, limit):
 
 # Debugging
 if __name__ == "__main__":
-    query = "việt nam, \"\""
+    query = "nền tảng"
     data, time, quatity = search(query, 3)
 
     top = 0
