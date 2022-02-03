@@ -14,7 +14,7 @@ import numpy as np
 from collections import OrderedDict
 from prepare import download_material
 
-# download_material()
+download_material()
 def load_cont(fld_path):  # give path of the folder containing all documents
     file_names = glob.glob(fld_path)
     collected_file_names = file_names[:10]
