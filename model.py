@@ -174,8 +174,8 @@ def search(query, limit):
             # Read from internal folder
             with open('cache/docs.bin', 'rb') as docs_bin:
                 docs = pickle.load(docs_bin)
-            #with open('cache/tf_idf.bin', 'rb') as tf_idf_bin:
-             #   tf_idf = pickle.load(tf_idf_bin)
+            with open('cache/tf_idf.bin', 'rb') as tf_idf_bin:
+               tf_idf = pickle.load(tf_idf_bin)
     except Exception as e:
         print(e)
         print('Begin build model', time.time())
