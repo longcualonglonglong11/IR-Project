@@ -12,7 +12,7 @@ import string
 import numpy as np
 from collections import OrderedDict
 from prepare import download_material
-
+from queryExpansion import query_expansion
 
 download_material()
 
@@ -141,6 +141,7 @@ def cal_tfidf(vocab, tf, idf_scr, doc_dict):
             tf_idf_list[doc_name][word] = idf_scr[word] * tf[doc_name][word]
     return tf_idf_list
 
+
 def process_query(query, doc_dict, tf_idf, limit):
     query_vocab = []
     for word in query.split():
@@ -148,6 +149,11 @@ def process_query(query, doc_dict, tf_idf, limit):
             query_vocab.append(word)
 
     query_vocab = remove_stopwords_and_punctuations_for_query(query_vocab)
+    extra_query = query_expansion(query_vocab)
+    for word in query_vocab:
+        if word in extra_query:
+            extra_query.remove(word)
+    query_vocab += extra_query
     query_word_count = {}
     for word in query_vocab:
         query_word_count[word] = query.lower().split().count(word)
@@ -159,8 +165,9 @@ def process_query(query, doc_dict, tf_idf, limit):
             try:
                 score += query_word_count[word] * tf_idf[doc_name][word]
             except:
-                # Penalizing
-                score -= len(doc_dict[doc_name]) * query_word_count[word]
+                if word not in extra_query:
+                    # Penalizing
+                    score -= len(doc_dict[doc_name]) * query_word_count[word]
         scores[doc_name] = score
         if score > 0 and doc_dict[doc_name].find(query) > 0:
             scores[doc_name] += 100000
